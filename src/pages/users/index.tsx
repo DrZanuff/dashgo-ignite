@@ -1,16 +1,41 @@
 import Link from 'next/link'
 import {
 	Box, Flex, Heading, Button, Icon, Text,
-	Table, Thead, Tr, Th, Checkbox, Tbody, Td, useBreakpointValue
+	Table, Thead, Tr, Th, Checkbox, Tbody, Td, useBreakpointValue, Spinner
 } from '@chakra-ui/react';
+import { useQuery } from 'react-query'
 
 import { RiAddLine, RiPencilLine } from 'react-icons/ri';
 import { Header } from '../../components/Header';
 import { Pagination } from '../../components/Pagination';
 import { Sidebar } from '../../components/Sidebar';
+import { useState } from 'react';
+
+type User = {
+  name: string;
+  email: string;
+  createdAt: string;
+	id: string;
+}
 
 export default function Userlist() {
 	const isWideVersion = useBreakpointValue({ base: false, lg: true })
+
+	const { data , isLoading, error } = useQuery('users', async () => {
+		const response = await fetch('http:localhost:3000/api/users')
+		const data = await response.json()
+
+		const users = data.users.map( (user: User) => {
+			return {
+				id: user.id,
+				name: user.name,
+				email: user.email,
+				createdAt: new Date(user.createdAt).toLocaleDateString()
+			}
+		})
+
+		return users
+	})
 
 	return (
 		<Box>
@@ -33,97 +58,67 @@ export default function Userlist() {
 						</Link>
 					</Flex>
 
-					<Table colorScheme="whiteAlpha">
-						<Thead>
-							<Tr>
-								<Th px={["4", "4" ,"6"]} color="gray.300" width="8">
-									<Checkbox colorScheme="pink" />
-								</Th>
-								<Th>Usuários</Th>
-								{ isWideVersion && <Th>Data de cadastro</Th>}
-								<Th width="8"></Th>
-							</Tr>
-						</Thead>
-						<Tbody>
-							<Tr _hover={{ opacity: 0.8 }}>
-								<Td px={["4", "4" ,"6"]}>
-									<Checkbox colorScheme="pink" />
-								</Td>
-								<Td>
-									<Box>
-										<Text fontWeight="bold">Ricardo Machado</Text>
-										<Text fontSize="sm" color="gray.300">ricardo@gmail.com</Text>
-									</Box>
-								</Td>
-								{ isWideVersion && <Td>03 de Março, 2021</Td> }
-								<Td>
-									<Button
-										opacity={0.1}
-										_hover={{ opacity: 1.0 }}
-										as="a"
-										size="sm"
-										fontSize="sm"
-										colorScheme="purple"
-										leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
-									>
-										{ isWideVersion ? 'Editar' :  '' }
-									</Button>
-								</Td>
-							</Tr>
-							<Tr _hover={{ opacity: 0.8 }}>
-								<Td px={["4", "4" ,"6"]}>
-									<Checkbox colorScheme="pink" />
-								</Td>
-								<Td>
-									<Box>
-										<Text fontWeight="bold">Ricardo Machado</Text>
-										<Text fontSize="sm" color="gray.300">ricardo@gmail.com</Text>
-									</Box>
-								</Td>
-								{ isWideVersion && <Td>03 de Março, 2021</Td> }
-								<Td>
-									<Button
-										opacity={0.1}
-										_hover={{ opacity: 1.0 }}
-										as="a"
-										size="sm"
-										fontSize="sm"
-										colorScheme="purple"
-										leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
-									>
-										{ isWideVersion ? 'Editar' :  '' }
-									</Button>
-								</Td>
-							</Tr>
-							<Tr _hover={{ opacity: 0.8 }}>
-								<Td px={["4", "4" ,"6"]}>
-									<Checkbox colorScheme="pink" />
-								</Td>
-								<Td>
-									<Box>
-										<Text fontWeight="bold">Ricardo Machado</Text>
-										<Text fontSize="sm" color="gray.300">ricardo@gmail.com</Text>
-									</Box>
-								</Td>
-								{ isWideVersion && <Td>03 de Março, 2021</Td> }
-								<Td>
-									<Button
-										opacity={0.1}
-										_hover={{ opacity: 1.0 }}
-										as="a"
-										size="sm"
-										fontSize="sm"
-										colorScheme="purple"
-										leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
-									>
-										{ isWideVersion ? 'Editar' :  '' }
-									</Button>
-								</Td>
-							</Tr>
-						</Tbody>
-					</Table>
+				{
+					isLoading ? (
+						<Flex justify="center">
+							<Spinner />
+						</Flex>
+					) : error ? (
+						<Flex justify="center">
+							Falha ao obter dados dos usuários
+						</Flex>
+					) : (
+						<>
+							<Table colorScheme="whiteAlpha">
+							<Thead>
+								<Tr>
+									<Th px={["4", "4" ,"6"]} color="gray.300" width="8">
+										<Checkbox colorScheme="pink" />
+									</Th>
+									<Th>Usuários</Th>
+									{ isWideVersion && <Th>Data de cadastro</Th>}
+									<Th width="8"></Th>
+								</Tr>
+							</Thead>
+							<Tbody>
 
-					<Pagination></Pagination>
+								{
+									data.map( (user : User) => (
+										<Tr _hover={{ opacity: 0.8 }} key={user.id}>
+											<Td px={["4", "4" ,"6"]}>
+												<Checkbox colorScheme="pink" />
+											</Td>
+											<Td>
+												<Box>
+													<Text fontWeight="bold">{user.name}</Text>
+													<Text fontSize="sm" color="gray.300">{user.email}</Text>
+												</Box>
+											</Td>
+											{ isWideVersion && <Td>{user.createdAt}</Td> }
+											<Td>
+												<Button
+													opacity={0.1}
+													_hover={{ opacity: 1.0 }}
+													as="a"
+													size="sm"
+													fontSize="sm"
+													colorScheme="purple"
+													leftIcon={<Icon as={RiPencilLine} fontSize="16" />}
+												>
+													{ isWideVersion ? 'Editar' :  '' }
+												</Button>
+											</Td>
+										</Tr>
+									))
+								}
+								
+							</Tbody>
+						</Table>
+
+						<Pagination></Pagination>
+						</>
+					)
+				}
 				</Box>
 			</Flex>
 
